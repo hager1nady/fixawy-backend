@@ -1,0 +1,159 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Client {
+  id                     String   @id @default(uuid())
+  fullName               String
+  mobileNumber           String @unique
+  email                  String?
+  password               String
+  profilePicture         String?
+  dateOfBirth            DateTime?
+  nationalId             String
+  nationalIdImage        String
+  currentLocation        String?
+  preferredLanguage      String?
+  preferredPaymentMethod String?
+  accountStatus          String
+
+  orders                 Order[]
+}
+
+model Technician {
+  id                       String   @id @default(uuid())
+  fullName                 String
+  mobileNumber             String   @unique
+  email                    String?  @unique
+  password                 String
+  profilePicture           String?
+  idCardImage              String?
+  licenseRegistrationImage String?
+  profession               String
+  specialty                String?
+  yearsOfExperience        Int
+  workArea                 String
+  currentLocation          String?
+  workingHours             String
+  holidays                 String?
+  transportation           String?
+  bankAccount              String?
+  eWallet                  String?
+  commissionPercentage     Float    @default(0)
+  averageRating            Float    @default(0)
+  completedOrdersCount     Int      @default(0)
+  cancelledOrdersCount     Int      @default(0)
+  accountStatus            String   @default("PENDING")
+
+  assignments Assignment[]
+}
+
+model CatalogService {
+  id                 String   @id @default(uuid())
+  serviceName        String
+  mainCategory       String
+  subcategory        String
+  serviceDescription String
+  illustrativeImage  String?
+  initialPrice       Float?
+  pricingMethod      String?
+  expectedDuration   Int?
+
+  orders Order[]
+}
+
+model Order {
+  id                 String   @id @default(uuid())
+  problemDescription String
+  problemImage       String?
+  problemVideo       String?
+  serviceLocation    String
+  acceptanceTime     DateTime?
+  arrivalTime        DateTime?
+  completionTime     DateTime?
+  status             String
+  cancellationReason String?
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id])
+
+  serviceId String
+  service   CatalogService @relation(fields: [serviceId], references: [id])
+
+  assignments Assignment[]
+  payments    Payment[]
+  complaints  Complaint[]
+  ratings     Rating[]
+}
+
+model Assignment {
+  id           String   @id @default(uuid())
+  orderId      String
+  technicianId String
+  status       String
+  assignedAt   DateTime  @default(now())
+  respondedAt  DateTime?
+
+  order      Order      @relation(fields: [orderId], references: [id])
+  technician Technician @relation(fields: [technicianId], references: [id])
+
+  @@unique([orderId, technicianId])
+}
+
+model Rating {
+  id         String   @id @default(uuid())
+  rating     Int
+  comment    String?
+  images     String?
+  ratingDate DateTime @default(now())
+
+  raterType String
+  raterId   String
+  ratedType String
+  ratedId   String
+
+  orderId String
+  order   Order @relation(fields: [orderId], references: [id])
+}
+
+model Payment {
+  id                 String   @id @default(uuid())
+  transactionId      String   @unique
+  serviceValue       Float
+  commission         Float
+  tax                Float?
+  technicianEarnings Float
+  paymentMethod      String
+  paymentStatus      String
+  paymentDate        DateTime @default(now())
+  referenceNumber    String?
+
+  orderId String
+  order   Order @relation(fields: [orderId], references: [id])
+}
+
+model Complaint {
+  id                          String   @id @default(uuid())
+  complainantType             String
+  complainantId               String
+  againstType                 String
+  againstId                   String
+  reason                      String
+  attachments                 String?
+  responsibleReviewEmployeeId String?
+  complaintStatus             String
+  finalDecision               String?
+
+  orderId String
+  order   Order @relation(fields: [orderId], references: [id])
+}
