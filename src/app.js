@@ -5,6 +5,7 @@ const swaggerUi = require("swagger-ui-express");
 
 const clientRoutes = require("./modules/client/client.routes");
 const technicianRoutes = require("./modules/technician/technician.routes");
+
 const swaggerSpec = require("./config/swagger");
 
 const app = express();
@@ -22,7 +23,7 @@ app.use("/api/technicians", technicianRoutes);
 
 app.use(
     "/api-docs",
-    swaggerUi.serve,
+    swaggerUi.serveFiles(swaggerSpec),
     swaggerUi.setup(swaggerSpec)
 );
 
