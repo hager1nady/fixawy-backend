@@ -4,11 +4,17 @@ const express = require("express");
 
 const clientRoutes = require("./modules/client/client.routes");
 const technicianRoutes = require("./modules/technician/technician.routes");
-
+const orderRoutes = require("./modules/order/order.routes");
+const catalogRoutes = require("./modules/catalog-service/catalog.routes");
+const assignmentRoutes = require("./modules/assignment/assignment.routes");
+const paymentRoutes = require("./modules/payment/payment.routes");
+const ratingRoutes = require("./modules/rating/rating.routes");
+const complaintRoutes = require("./modules/complaint/complaint.routes");
 const swaggerSpec = require("./config/swagger");
+const cors = require("cors");
 
 const app = express();
-
+app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -20,6 +26,18 @@ app.get("/", (req, res) => {
 app.use("/api/clients", clientRoutes);
 
 app.use("/api/technicians", technicianRoutes);
+
+app.use("/api/orders", orderRoutes);
+
+app.use("/api/ratings", ratingRoutes);
+
+app.use("/api/complaints", complaintRoutes);
+
+app.use("/api/services", catalogRoutes);
+
+app.use("/api/assignments", assignmentRoutes);
+
+app.use("/api/payments", paymentRoutes);
 
 app.get("/api-docs", (req, res) => {
     res.send(`

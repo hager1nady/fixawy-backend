@@ -54,6 +54,9 @@ const router = express.Router();
  *                   - Installations
  *                   - Carpentry
  *                   - Painting
+ *               specialty:
+ *                 type: string
+ *                 example: Air Conditioning
  *               yearsOfExperience:
  *                 type: integer
  *                 example: 5
@@ -78,7 +81,7 @@ router.post(
     technicianController.registerTechnician
 );
 
- /**
+/**
  * @swagger
  * /api/technicians/login:
  *   post:

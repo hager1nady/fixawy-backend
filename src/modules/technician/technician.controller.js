@@ -8,6 +8,7 @@ const registerTechnician = async (req, res) => {
                 mobileNumber: req.body.mobileNumber,
                 password: req.body.password,
                 profession: req.body.profession,
+                specialty: req.body.specialty,
                 yearsOfExperience: req.body.yearsOfExperience,
                 workArea: req.body.workArea,
                 workingHours: req.body.workingHours,
@@ -26,6 +27,7 @@ const registerTechnician = async (req, res) => {
         });
     }
 };
+
 const loginTechnician = async (req, res) => {
     try {
         const { mobileNumber, password } = req.body;
