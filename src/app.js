@@ -5,12 +5,15 @@ const express = require("express");
 const clientRoutes = require("./modules/client/client.routes");
 const technicianRoutes = require("./modules/technician/technician.routes");
 const orderRoutes = require("./modules/order/order.routes");
+const adminRoutes = require("./modules/admin/admin.routes");
 const catalogRoutes = require("./modules/catalog-service/catalog.routes");
 const assignmentRoutes = require("./modules/assignment/assignment.routes");
 const paymentRoutes = require("./modules/payment/payment.routes");
 const ratingRoutes = require("./modules/rating/rating.routes");
 const complaintRoutes = require("./modules/complaint/complaint.routes");
+const followUpRoutes = require("./modules/follow-up/followUp.routes");
 const swaggerSpec = require("./config/swagger");
+
 const cors = require("cors");
 
 const app = express();
@@ -29,9 +32,13 @@ app.use("/api/technicians", technicianRoutes);
 
 app.use("/api/orders", orderRoutes);
 
+app.use("/api/admin", adminRoutes);
+
 app.use("/api/ratings", ratingRoutes);
 
 app.use("/api/complaints", complaintRoutes);
+
+app.use("/api/follow-ups", followUpRoutes);
 
 app.use("/api/services", catalogRoutes);
 

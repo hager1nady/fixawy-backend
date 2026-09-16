@@ -13,9 +13,9 @@ datasource db {
 }
 
 model Client {
-  id                     String   @id @default(uuid())
+  id                     String    @id @default(uuid())
   fullName               String
-  mobileNumber           String @unique
+  mobileNumber           String    @unique
   email                  String?
   password               String
   profilePicture         String?
@@ -27,14 +27,14 @@ model Client {
   preferredPaymentMethod String?
   accountStatus          String
 
-  orders                 Order[]
+  orders Order[]
 }
 
 model Technician {
-  id                       String   @id @default(uuid())
+  id                       String  @id @default(uuid())
   fullName                 String
-  mobileNumber             String   @unique
-  email                    String?  @unique
+  mobileNumber             String  @unique
+  email                    String? @unique
   password                 String
   profilePicture           String?
   idCardImage              String?
@@ -49,17 +49,28 @@ model Technician {
   transportation           String?
   bankAccount              String?
   eWallet                  String?
-  commissionPercentage     Float    @default(0)
-  averageRating            Float    @default(0)
-  completedOrdersCount     Int      @default(0)
-  cancelledOrdersCount     Int      @default(0)
-  accountStatus            String   @default("PENDING")
+  commissionPercentage     Float   @default(0)
+  averageRating            Float   @default(0)
+  completedOrdersCount     Int     @default(0)
+  cancelledOrdersCount     Int     @default(0)
+  accountStatus            String  @default("PENDING")
 
   assignments Assignment[]
 }
 
+model Admin {
+  id            String   @id @default(uuid())
+  fullName      String
+  email         String   @unique
+  password      String
+  role          String   @default("SUPER_ADMIN")
+  accountStatus String   @default("ACTIVE")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 model CatalogService {
-  id                 String   @id @default(uuid())
+  id                 String  @id @default(uuid())
   serviceName        String
   mainCategory       String
   subcategory        String
@@ -73,7 +84,8 @@ model CatalogService {
 }
 
 model Order {
-  id                 String   @id @default(uuid())
+  id                 String    @id @default(uuid())
+  createdAt           DateTime  @default(now())
   problemDescription String
   problemImage       String?
   problemVideo       String?
@@ -94,10 +106,11 @@ model Order {
   payments    Payment[]
   complaints  Complaint[]
   ratings     Rating[]
+  followUp    FollowUp?
 }
 
 model Assignment {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   orderId      String
   technicianId String
   status       String
@@ -123,7 +136,7 @@ model Rating {
   ratedId   String
 
   orderId String
-  order   Order @relation(fields: [orderId], references: [id])
+  order   Order  @relation(fields: [orderId], references: [id])
 }
 
 model Payment {
@@ -139,11 +152,11 @@ model Payment {
   referenceNumber    String?
 
   orderId String
-  order   Order @relation(fields: [orderId], references: [id])
+  order   Order  @relation(fields: [orderId], references: [id])
 }
 
 model Complaint {
-  id                          String   @id @default(uuid())
+  id                          String  @id @default(uuid())
   complainantType             String
   complainantId               String
   againstType                 String
@@ -155,5 +168,17 @@ model Complaint {
   finalDecision               String?
 
   orderId String
-  order   Order @relation(fields: [orderId], references: [id])
+  order   Order  @relation(fields: [orderId], references: [id])
+}
+
+model FollowUp {
+  id                String    @id @default(uuid())
+  orderId           String    @unique
+  scheduledAt       DateTime
+  completedAt       DateTime?
+  status            String
+  customerSatisfied Boolean?
+  notes             String?
+
+  order Order @relation(fields: [orderId], references: [id])
 }

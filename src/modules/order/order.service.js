@@ -169,50 +169,32 @@ const markOrderAsCompleted = async (orderId, user) => {
     return await orderRepository.markOrderAsCompleted(orderId);
 };
 const cancelOrder = async (orderId, user, cancellationReason) => {
-    // Only clients and technicians can cancel orders
-    if (user.role !== "client" && user.role !== "technician") {
-        throw new Error(
-            "Only clients or technicians can cancel orders"
-        );
-    }
-
-    // Cancellation reason is required
-    if (!cancellationReason || !cancellationReason.trim()) {
+    if (!cancellationReason) {
         throw new Error("Cancellation reason is required");
     }
 
-    // Check that the user is allowed to cancel this order
-    const order = await orderRepository.findOrderForCancellation(
+    const order = await orderRepository.findOrderForTechnician(
         orderId,
-        user
+        user.id
     );
 
     if (!order) {
         throw new Error(
-            "Order not found or you are not authorized to cancel it"
+            "Order not found or you are not assigned to this order"
         );
     }
 
-    // Completed orders cannot be cancelled
     if (order.status === "COMPLETED") {
         throw new Error("Completed orders cannot be cancelled");
     }
 
-    // Already cancelled
     if (order.status === "CANCELLED") {
         throw new Error("Order is already cancelled");
     }
 
-    // Only NEW and ONGOING orders can be cancelled
-    if (order.status !== "NEW" && order.status !== "ONGOING") {
-        throw new Error(
-            "Order cannot be cancelled in its current status"
-        );
-    }
-
     return await orderRepository.cancelOrder(
         orderId,
-        cancellationReason.trim()
+        cancellationReason
     );
 };
 
