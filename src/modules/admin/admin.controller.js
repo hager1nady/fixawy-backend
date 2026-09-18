@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const prisma = require("../../config/prisma");
 const { generateToken } = require("../../config/jwt");
+const loginLogService = require("../security/loginLog.service");
 
 const loginAdmin = async (req, res) => {
     try {
@@ -45,6 +46,19 @@ const loginAdmin = async (req, res) => {
             id: admin.id,
             role: "admin",
             adminRole: admin.role,
+        });
+
+        await loginLogService.createLoginLog({
+            userType: "ADMIN",
+            userId: admin.id,
+            email: admin.email,
+            status: "SUCCESS",
+            ipAddress: req.ip,
+            deviceType:
+                req.headers["sec-ch-ua-mobile"] === "?1"
+                    ? "Mobile"
+                    : "Desktop",
+            operatingSystem: req.headers["user-agent"] || null,
         });
 
         return res.status(200).json({
@@ -329,6 +343,7 @@ const activateTechnician = async (req, res) => {
         });
     }
 };
+
 const disableTechnician = async (req, res) => {
     try {
         const { id } = req.params;
@@ -497,7 +512,6 @@ const getAverageOrderTimes = async (req, res) => {
         let executionOrdersCount = 0;
 
         orders.forEach((order) => {
-            // Average arrival time
             if (order.acceptanceTime && order.arrivalTime) {
                 const arrivalTime =
                     new Date(order.arrivalTime).getTime() -
@@ -507,7 +521,6 @@ const getAverageOrderTimes = async (req, res) => {
                 arrivalOrdersCount++;
             }
 
-            // Average execution time
             if (order.arrivalTime && order.completionTime) {
                 const executionTime =
                     new Date(order.completionTime).getTime() -
@@ -733,7 +746,8 @@ const getTechnicianFilesArchive = async (req, res) => {
             files: {
                 profilePicture: technician.profilePicture,
                 idCardImage: technician.idCardImage,
-                licenseRegistrationImage: technician.licenseRegistrationImage,
+                licenseRegistrationImage:
+                    technician.licenseRegistrationImage,
             },
         }));
 

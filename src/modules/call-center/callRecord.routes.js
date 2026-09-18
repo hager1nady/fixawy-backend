@@ -9,6 +9,10 @@ const {
     getAllCallRecords,
 } = require("./callRecord.controller");
 
+const {
+    getSupportMessage,
+} = require("./support.controller");
+
 /**
  * @swagger
  * tags:
@@ -132,5 +136,22 @@ router.get("/calls", getAllCallRecords);
  *         description: Call record not found
  */
 router.get("/calls/:id", getCallRecordById);
+
+/**
+ * @swagger
+ * /api/call-center/support-message:
+ *   get:
+ *     summary: Get support message with Fixawy app download link
+ *     tags: [Call Center]
+ *     responses:
+ *       200:
+ *         description: Support message retrieved successfully
+ *       500:
+ *         description: Internal server error
+ */
+router.get(
+    "/support-message",
+    getSupportMessage
+);
 
 module.exports = router;

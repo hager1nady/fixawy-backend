@@ -207,3 +207,56 @@ model CallRecord {
   orderId         String?
   order           Order?   @relation(fields: [orderId], references: [id])
 }
+
+model LoginLog {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+
+  userType    String
+  userId      String?
+  email       String?
+
+  status      String
+  ipAddress   String?
+  deviceType  String?
+  operatingSystem String?
+
+  failureReason String?
+}
+
+model TrustedDevice {
+  id              String   @id @default(uuid())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  userType        String
+  userId          String
+
+  deviceName      String?
+  deviceType      String?
+  operatingSystem String?
+  ipAddress       String?
+
+  trusted         Boolean  @default(true)
+  lastUsedAt      DateTime?
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+
+  actorType   String
+  actorId     String?
+
+  targetType  String
+  targetId    String?
+
+  action      String
+  description String?
+  oldData     String?
+  newData     String?
+
+  ipAddress   String?
+  deviceType  String?
+  operatingSystem String?
+}

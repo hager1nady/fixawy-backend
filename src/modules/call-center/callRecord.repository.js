@@ -22,8 +22,21 @@ const getAllCallRecords = async () => {
     });
 };
 
+const findOrderById = async (orderId) => {
+    return await prisma.order.findUnique({
+        where: {
+            id: orderId,
+        },
+        select: {
+            id: true,
+            status: true,
+        },
+    });
+};
+
 module.exports = {
     createCallRecord,
     findCallRecordById,
     getAllCallRecords,
+    findOrderById,
 };

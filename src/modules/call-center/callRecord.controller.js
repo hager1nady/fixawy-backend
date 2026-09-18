@@ -3,7 +3,10 @@ const callRecordService = require("./callRecord.service");
 const createCallRecord = async (req, res) => {
     try {
         const callRecord =
-            await callRecordService.createCallRecord(req.body);
+        await callRecordService.createCallRecord(
+            req.body,
+            req.file
+        );
 
         return res.status(201).json({
             message: "Call record created successfully",
