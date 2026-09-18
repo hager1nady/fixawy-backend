@@ -14,6 +14,8 @@ const {
     getCancellationRate,
     getCustomerSatisfaction,
     getProfitValue,
+    getTechnicianFilesArchive,
+    getClientFilesArchive,
     getAllOrders,
     getAllComplaints,
     updateComplaint,
@@ -127,6 +129,30 @@ router.get("/clients", adminMiddleware, getAllClients);
  *         description: Internal server error
  */
 router.get("/technicians", adminMiddleware, getAllTechnicians);
+
+/**
+ * @swagger
+ * /api/admin/files/clients:
+ *   get:
+ *     summary: Get client files archive
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Client files archive retrieved successfully
+ *       401:
+ *         description: Invalid or missing authorization token
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
+ */
+router.get(
+    "/files/clients",
+    adminMiddleware,
+    getClientFilesArchive
+);
 
 /**
  * @swagger
@@ -338,6 +364,30 @@ router.get(
     "/reports/average-order-times",
     adminMiddleware,
     getAverageOrderTimes
+);
+
+ /**
+  * @swagger
+  * /api/admin/files/technicians:
+  *   get:
+  *     summary: Get technician files archive
+  *     tags: [Admin]
+  *     security:
+  *       - bearerAuth: []
+  *     responses:
+  *       200:
+  *         description: Technician files archive retrieved successfully
+  *       401:
+  *         description: Invalid or missing authorization token
+  *       403:
+  *         description: Admin access required
+  *       500:
+  *         description: Internal server error
+  */
+router.get(
+    "/files/technicians",
+    adminMiddleware,
+    getTechnicianFilesArchive
 );
 
 /**

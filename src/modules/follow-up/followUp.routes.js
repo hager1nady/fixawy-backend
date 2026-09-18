@@ -1,8 +1,11 @@
 const express = require("express");
-const authMiddleware = require("../../middlewares/auth.middleware");
-const followUpController = require("./followUp.controller");
 
 const router = express.Router();
+
+const {
+    createFollowUp,
+    completeFollowUp,
+} = require("./followUp.controller");
 
 /**
  * @swagger
@@ -17,8 +20,6 @@ const router = express.Router();
  *   post:
  *     summary: Create a follow-up for an order
  *     tags: [Follow-ups]
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: orderId
@@ -26,6 +27,7 @@ const router = express.Router();
  *         schema:
  *           type: string
  *           format: uuid
+ *         description: Order ID
  *     requestBody:
  *       required: true
  *       content:
@@ -38,19 +40,55 @@ const router = express.Router();
  *               scheduledAt:
  *                 type: string
  *                 format: date-time
- *                 example: "2026-09-16T12:00:00.000Z"
+ *                 example: "2026-09-17T14:00:00.000Z"
  *     responses:
  *       201:
  *         description: Follow-up created successfully
  *       400:
  *         description: Invalid request
- *       401:
- *         description: Authorization token is required or invalid
  */
-router.post(
-    "/:orderId",
-    authMiddleware,
-    followUpController.createFollowUp
-);
+router.post("/:orderId", createFollowUp);
+
+/**
+ * @swagger
+ * /api/follow-ups/{orderId}:
+ *   put:
+ *     summary: Complete a follow-up for an order
+ *     tags: [Follow-ups]
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Order ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - completedAt
+ *               - customerSatisfied
+ *             properties:
+ *               completedAt:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2026-09-17T15:00:00.000Z"
+ *               customerSatisfied:
+ *                 type: boolean
+ *                 example: true
+ *               notes:
+ *                 type: string
+ *                 example: "Customer confirmed that the issue was resolved."
+ *     responses:
+ *       200:
+ *         description: Follow-up completed successfully
+ *       400:
+ *         description: Invalid request or follow-up not found
+ */
+router.put("/:orderId", completeFollowUp);
 
 module.exports = router;

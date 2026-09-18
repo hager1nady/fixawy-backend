@@ -107,6 +107,7 @@ model Order {
   complaints  Complaint[]
   ratings     Rating[]
   followUp    FollowUp?
+  callRecords CallRecord[]
 }
 
 model Assignment {
@@ -181,4 +182,28 @@ model FollowUp {
   notes             String?
 
   order Order @relation(fields: [orderId], references: [id])
+}
+
+model CallRecord {
+  id              String   @id @default(uuid())
+  createdAt       DateTime @default(now())
+
+  callerType      String
+  callerId        String?
+
+  receiverType    String
+  receiverId      String?
+
+  department      String?
+  callType        String
+
+  startedAt       DateTime
+  endedAt         DateTime?
+  durationSeconds Int?
+
+  recordingUrl    String?
+  notes           String?
+
+  orderId         String?
+  order           Order?   @relation(fields: [orderId], references: [id])
 }

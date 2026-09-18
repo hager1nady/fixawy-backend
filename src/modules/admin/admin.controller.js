@@ -715,6 +715,74 @@ const getProfitValue = async (req, res) => {
     }
 };
 
+const getTechnicianFilesArchive = async (req, res) => {
+    try {
+        const technicians = await prisma.technician.findMany({
+            select: {
+                id: true,
+                fullName: true,
+                profilePicture: true,
+                idCardImage: true,
+                licenseRegistrationImage: true,
+            },
+        });
+
+        const data = technicians.map((technician) => ({
+            technicianId: technician.id,
+            fullName: technician.fullName,
+            files: {
+                profilePicture: technician.profilePicture,
+                idCardImage: technician.idCardImage,
+                licenseRegistrationImage: technician.licenseRegistrationImage,
+            },
+        }));
+
+        return res.status(200).json({
+            message: "Technician files archive retrieved successfully",
+            data,
+        });
+    } catch (error) {
+        console.error("Get technician files archive error:", error);
+
+        return res.status(500).json({
+            message: "Internal server error",
+        });
+    }
+};
+
+const getClientFilesArchive = async (req, res) => {
+    try {
+        const clients = await prisma.client.findMany({
+            select: {
+                id: true,
+                fullName: true,
+                profilePicture: true,
+                nationalIdImage: true,
+            },
+        });
+
+        const data = clients.map((client) => ({
+            clientId: client.id,
+            fullName: client.fullName,
+            files: {
+                profilePicture: client.profilePicture,
+                nationalIdImage: client.nationalIdImage,
+            },
+        }));
+
+        return res.status(200).json({
+            message: "Client files archive retrieved successfully",
+            data,
+        });
+    } catch (error) {
+        console.error("Get client files archive error:", error);
+
+        return res.status(500).json({
+            message: "Internal server error",
+        });
+    }
+};
+
 const getAllOrders = async (req, res) => {
     try {
         const orders = await prisma.order.findMany({
@@ -782,6 +850,8 @@ module.exports = {
     getCancellationRate,
     getCustomerSatisfaction,
     getProfitValue,
+    getTechnicianFilesArchive,
+    getClientFilesArchive,
     getAllOrders,
     getAllComplaints,
     updateComplaint,

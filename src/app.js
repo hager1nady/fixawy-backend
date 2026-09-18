@@ -12,6 +12,7 @@ const paymentRoutes = require("./modules/payment/payment.routes");
 const ratingRoutes = require("./modules/rating/rating.routes");
 const complaintRoutes = require("./modules/complaint/complaint.routes");
 const followUpRoutes = require("./modules/follow-up/followUp.routes");
+const callRecordRoutes = require("./modules/call-center/callRecord.routes");
 const swaggerSpec = require("./config/swagger");
 
 const cors = require("cors");
@@ -45,6 +46,8 @@ app.use("/api/services", catalogRoutes);
 app.use("/api/assignments", assignmentRoutes);
 
 app.use("/api/payments", paymentRoutes);
+
+app.use("/api/call-center", callRecordRoutes); 
 
 app.get("/api-docs", (req, res) => {
     res.send(`
