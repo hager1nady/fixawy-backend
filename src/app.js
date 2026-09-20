@@ -13,6 +13,7 @@ const ratingRoutes = require("./modules/rating/rating.routes");
 const complaintRoutes = require("./modules/complaint/complaint.routes");
 const followUpRoutes = require("./modules/follow-up/followUp.routes");
 const callRecordRoutes = require("./modules/call-center/callRecord.routes");
+const clientBalanceRoutes = require("./modules/client/client-balance.routes");
 const swaggerSpec = require("./config/swagger");
 
 const cors = require("cors");
@@ -32,7 +33,10 @@ app.use("/api/clients", clientRoutes);
 app.use("/api/technicians", technicianRoutes);
 
 app.use("/api/orders", orderRoutes);
-
+app.use((req, res, next) => {
+    console.log("REQUEST:", req.method, req.originalUrl);
+    next();
+});
 app.use("/api/admin", adminRoutes);
 
 app.use("/api/ratings", ratingRoutes);
@@ -48,6 +52,8 @@ app.use("/api/assignments", assignmentRoutes);
 app.use("/api/payments", paymentRoutes);
 
 app.use("/api/call-center", callRecordRoutes); 
+
+app.use("/api/clients", clientBalanceRoutes);
 
 app.get("/api-docs", (req, res) => {
     res.send(`

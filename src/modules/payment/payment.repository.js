@@ -29,6 +29,14 @@ const countClientOrders = async (clientId) => {
     });
 };
 
+const findPaymentByOrderId = async (orderId) => {
+    return await prisma.payment.findFirst({
+        where: {
+            orderId,
+        },
+    });
+};
+
 const createPayment = async (paymentData) => {
     return await prisma.payment.create({
         data: paymentData,
@@ -38,5 +46,6 @@ const createPayment = async (paymentData) => {
 module.exports = {
     findCompletedOrderForPayment,
     countClientOrders,
+    findPaymentByOrderId,
     createPayment,
 };

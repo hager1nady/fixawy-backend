@@ -14,6 +14,7 @@ const {
     getCancellationRate,
     getCustomerSatisfaction,
     getProfitValue,
+    getTechnicianSettlementReport,
     getTechnicianFilesArchive,
     getClientFilesArchive,
     getAllOrders,
@@ -66,7 +67,10 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.post("/login", loginAdmin);
+// router.post("/login", loginAdmin);
+router.post("/login", (req, res, next) => {
+    next();
+}, loginAdmin);
 
 /**
  * @swagger
@@ -272,6 +276,44 @@ router.get(
 
 /**
  * @swagger
+ * /api/admin/reports/technician-settlement:
+ *   get:
+ *     summary: Get technician settlement report
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - daily
+ *             - weekly
+ *             - monthly
+ *           default: monthly
+ *         description: Accounting period
+ *     responses:
+ *       200:
+ *         description: Technician settlement report retrieved successfully
+ *       400:
+ *         description: Invalid accounting period
+ *       401:
+ *         description: Authorization token is missing or invalid
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
+ */
+router.get(
+    "/reports/technician-settlement",
+    adminMiddleware,
+    getTechnicianSettlementReport
+);
+
+/**
+ * @swagger
  * /api/admin/reports/cancellation-rate:
  *   get:
  *     summary: Get order cancellation rate
@@ -342,7 +384,7 @@ router.get(
     getProfitValue
 );
 
- /**
+/**
  * @swagger
  * /api/admin/reports/average-order-times:
  *   get:
@@ -366,24 +408,24 @@ router.get(
     getAverageOrderTimes
 );
 
- /**
-  * @swagger
-  * /api/admin/files/technicians:
-  *   get:
-  *     summary: Get technician files archive
-  *     tags: [Admin]
-  *     security:
-  *       - bearerAuth: []
-  *     responses:
-  *       200:
-  *         description: Technician files archive retrieved successfully
-  *       401:
-  *         description: Invalid or missing authorization token
-  *       403:
-  *         description: Admin access required
-  *       500:
-  *         description: Internal server error
-  */
+/**
+ * @swagger
+ * /api/admin/files/technicians:
+ *   get:
+ *     summary: Get technician files archive
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Technician files archive retrieved successfully
+ *       401:
+ *         description: Invalid or missing authorization token
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
+ */
 router.get(
     "/files/technicians",
     adminMiddleware,

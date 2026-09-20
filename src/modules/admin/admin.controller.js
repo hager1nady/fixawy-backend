@@ -2,6 +2,8 @@ const bcrypt = require("bcrypt");
 const prisma = require("../../config/prisma");
 const { generateToken } = require("../../config/jwt");
 const loginLogService = require("../security/loginLog.service");
+const trustedDeviceService = require("../security/trustedDevice.service");
+const auditLogService = require("../security/auditLog.service");
 
 const loginAdmin = async (req, res) => {
     try {
@@ -13,6 +15,14 @@ const loginAdmin = async (req, res) => {
             });
         }
 
+        const deviceType =
+            req.headers["sec-ch-ua-mobile"] === "?1"
+                ? "Mobile"
+                : "Desktop";
+
+        const operatingSystem =
+            req.headers["user-agent"] || null;
+
         const admin = await prisma.admin.findUnique({
             where: {
                 email,
@@ -20,12 +30,34 @@ const loginAdmin = async (req, res) => {
         });
 
         if (!admin) {
+            await loginLogService.createLoginLog({
+                userType: "ADMIN",
+                userId: null,
+                email,
+                status: "FAILED",
+                ipAddress: req.ip,
+                deviceType,
+                operatingSystem,
+                failureReason: "Invalid email or password",
+            });
+
             return res.status(401).json({
                 message: "Invalid email or password",
             });
         }
 
         if (admin.accountStatus !== "ACTIVE") {
+            await loginLogService.createLoginLog({
+                userType: "ADMIN",
+                userId: admin.id,
+                email: admin.email,
+                status: "FAILED",
+                ipAddress: req.ip,
+                deviceType,
+                operatingSystem,
+                failureReason: "Admin account is not active",
+            });
+
             return res.status(403).json({
                 message: "Admin account is not active",
             });
@@ -35,8 +67,27 @@ const loginAdmin = async (req, res) => {
             password,
             admin.password
         );
+        await trustedDeviceService.registerOrUpdateDevice({
+            userType: "ADMIN",
+            userId: admin.id,
+            deviceType,
+            operatingSystem,
+            ipAddress: req.ip,
+        });
 
         if (!isPasswordValid) {
+            console.log("FAILED ADMIN LOGIN - BEFORE LOG SERVICE");
+            await loginLogService.createLoginLog({
+                userType: "ADMIN",
+                userId: admin.id,
+                email: admin.email,
+                status: "FAILED",
+                ipAddress: req.ip,
+                deviceType,
+                operatingSystem,
+                failureReason: "Invalid email or password",
+            });
+
             return res.status(401).json({
                 message: "Invalid email or password",
             });
@@ -54,11 +105,8 @@ const loginAdmin = async (req, res) => {
             email: admin.email,
             status: "SUCCESS",
             ipAddress: req.ip,
-            deviceType:
-                req.headers["sec-ch-ua-mobile"] === "?1"
-                    ? "Mobile"
-                    : "Desktop",
-            operatingSystem: req.headers["user-agent"] || null,
+            deviceType,
+            operatingSystem,
         });
 
         return res.status(200).json({
@@ -143,64 +191,6 @@ const getAllClients = async (req, res) => {
         });
     } catch (error) {
         console.error("Get all clients error:", error);
-
-        return res.status(500).json({
-            message: "Internal server error",
-        });
-    }
-};
-
-const getAllComplaints = async (req, res) => {
-    try {
-        const complaints = await prisma.complaint.findMany();
-
-        return res.status(200).json({
-            message: "Complaints retrieved successfully",
-            data: complaints,
-        });
-    } catch (error) {
-        console.error("Get all complaints error:", error);
-
-        return res.status(500).json({
-            message: "Internal server error",
-        });
-    }
-};
-
-const updateComplaint = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { complaintStatus, finalDecision } = req.body;
-
-        const complaint = await prisma.complaint.findUnique({
-            where: {
-                id,
-            },
-        });
-
-        if (!complaint) {
-            return res.status(404).json({
-                message: "Complaint not found",
-            });
-        }
-
-        const updatedComplaint = await prisma.complaint.update({
-            where: {
-                id,
-            },
-            data: {
-                complaintStatus,
-                finalDecision,
-                responsibleReviewEmployeeId: req.user.id,
-            },
-        });
-
-        return res.status(200).json({
-            message: "Complaint updated successfully",
-            data: updatedComplaint,
-        });
-    } catch (error) {
-        console.error("Update complaint error:", error);
 
         return res.status(500).json({
             message: "Internal server error",
@@ -327,6 +317,27 @@ const activateTechnician = async (req, res) => {
             },
         });
 
+        await auditLogService.createAuditLog({
+            actorType: "ADMIN",
+            actorId: req.user.id,
+            targetType: "TECHNICIAN",
+            targetId: technician.id,
+            action: "ACTIVATE_ACCOUNT",
+            description: "Admin activated technician account",
+            oldData: JSON.stringify({
+                accountStatus: technician.accountStatus,
+            }),
+            newData: JSON.stringify({
+                accountStatus: updatedTechnician.accountStatus,
+            }),
+            ipAddress: req.ip,
+            deviceType:
+                req.headers["sec-ch-ua-mobile"] === "?1"
+                    ? "Mobile"
+                    : "Desktop",
+            operatingSystem: req.headers["user-agent"] || null,
+        });
+
         return res.status(200).json({
             message: "Technician activated successfully",
             data: {
@@ -367,6 +378,27 @@ const disableTechnician = async (req, res) => {
             data: {
                 accountStatus: "DISABLED",
             },
+        });
+
+        await auditLogService.createAuditLog({
+            actorType: "ADMIN",
+            actorId: req.user.id,
+            targetType: "TECHNICIAN",
+            targetId: technician.id,
+            action: "DISABLE_ACCOUNT",
+            description: "Admin disabled technician account",
+            oldData: JSON.stringify({
+                accountStatus: technician.accountStatus,
+            }),
+            newData: JSON.stringify({
+                accountStatus: updatedTechnician.accountStatus,
+            }),
+            ipAddress: req.ip,
+            deviceType:
+                req.headers["sec-ch-ua-mobile"] === "?1"
+                    ? "Mobile"
+                    : "Desktop",
+            operatingSystem: req.headers["user-agent"] || null,
         });
 
         return res.status(200).json({
@@ -534,15 +566,15 @@ const getAverageOrderTimes = async (req, res) => {
         const averageArrivalTimeMinutes =
             arrivalOrdersCount > 0
                 ? Math.round(
-                      totalArrivalTime / arrivalOrdersCount / (1000 * 60)
-                  )
+                    totalArrivalTime / arrivalOrdersCount / (1000 * 60)
+                )
                 : 0;
 
         const averageExecutionTimeMinutes =
             executionOrdersCount > 0
                 ? Math.round(
-                      totalExecutionTime / executionOrdersCount / (1000 * 60)
-                  )
+                    totalExecutionTime / executionOrdersCount / (1000 * 60)
+                )
                 : 0;
 
         return res.status(200).json({
@@ -728,6 +760,179 @@ const getProfitValue = async (req, res) => {
     }
 };
 
+const getTechnicianSettlementReport = async (req, res) => {
+    try {
+        const { period = "monthly" } = req.query;
+
+        const allowedPeriods = ["daily", "weekly", "monthly"];
+
+        if (!allowedPeriods.includes(period)) {
+            return res.status(400).json({
+                message: "Invalid period. Use daily, weekly, or monthly",
+            });
+        }
+
+        const now = new Date();
+
+        let startDate = new Date(now);
+
+        if (period === "daily") {
+            startDate.setHours(0, 0, 0, 0);
+        }
+
+        if (period === "weekly") {
+            startDate.setDate(now.getDate() - 6);
+            startDate.setHours(0, 0, 0, 0);
+        }
+
+        if (period === "monthly") {
+            startDate = new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                1
+            );
+        }
+
+        const completedOrders = await prisma.order.findMany({
+            where: {
+                status: "COMPLETED",
+                completionTime: {
+                    gte: startDate,
+                    lte: now,
+                },
+            },
+
+            include: {
+                service: true,
+
+                assignments: {
+                    where: {
+                        status: "ACCEPTED",
+                    },
+
+                    include: {
+                        technician: true,
+                    },
+                },
+
+                payments: {
+                    orderBy: {
+                        paymentDate: "desc",
+                    },
+
+                    take: 1,
+                },
+            },
+
+            orderBy: {
+                completionTime: "asc",
+            },
+        });
+
+        const technicianReports = {};
+
+        for (const order of completedOrders) {
+            const assignment = order.assignments[0];
+
+            if (!assignment) {
+                continue;
+            }
+
+            const technician = assignment.technician;
+
+            const payment = order.payments[0];
+
+            const serviceValue = payment
+                ? payment.serviceValue
+                : order.service.initialPrice || 0;
+
+            const commission = payment
+                ? payment.commission
+                : serviceValue *
+                  (technician.commissionPercentage / 100);
+
+            const technicianEarnings = payment
+                ? payment.technicianEarnings
+                : serviceValue - commission;
+
+            if (!technicianReports[technician.id]) {
+                technicianReports[technician.id] = {
+                    technicianId: technician.id,
+                    technicianName: technician.fullName,
+                    completedOrders: 0,
+                    totalServiceValue: 0,
+                    totalCommission: 0,
+                    totalTechnicianEarnings: 0,
+                };
+            }
+
+            technicianReports[technician.id].completedOrders += 1;
+
+            technicianReports[technician.id].totalServiceValue +=
+                serviceValue;
+
+            technicianReports[technician.id].totalCommission +=
+                commission;
+
+            technicianReports[technician.id].totalTechnicianEarnings +=
+                technicianEarnings;
+        }
+
+        const technicians = Object.values(technicianReports);
+
+        const totalCompletedOrders = technicians.reduce(
+            (sum, technician) =>
+                sum + technician.completedOrders,
+            0
+        );
+
+        const totalServiceValue = technicians.reduce(
+            (sum, technician) =>
+                sum + technician.totalServiceValue,
+            0
+        );
+
+        const totalCommission = technicians.reduce(
+            (sum, technician) =>
+                sum + technician.totalCommission,
+            0
+        );
+
+        const totalTechnicianEarnings = technicians.reduce(
+            (sum, technician) =>
+                sum + technician.totalTechnicianEarnings,
+            0
+        );
+
+        return res.status(200).json({
+            message:
+                "Technician settlement report retrieved successfully",
+
+            data: {
+                period,
+                startDate,
+                endDate: now,
+
+                totalCompletedOrders,
+                totalServiceValue,
+                totalCommission,
+                totalTechnicianEarnings,
+
+                technicians,
+            },
+        });
+    } catch (error) {
+        console.error(
+            "Get technician settlement report error:",
+            error
+        );
+
+        return res.status(500).json({
+            message: "Internal server error",
+        });
+    }
+};
+
 const getTechnicianFilesArchive = async (req, res) => {
     try {
         const technicians = await prisma.technician.findMany({
@@ -849,6 +1054,64 @@ const getAllOrders = async (req, res) => {
     }
 };
 
+const getAllComplaints = async (req, res) => {
+    try {
+        const complaints = await prisma.complaint.findMany();
+
+        return res.status(200).json({
+            message: "Complaints retrieved successfully",
+            data: complaints,
+        });
+    } catch (error) {
+        console.error("Get all complaints error:", error);
+
+        return res.status(500).json({
+            message: "Internal server error",
+        });
+    }
+};
+
+const updateComplaint = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { complaintStatus, finalDecision } = req.body;
+
+        const complaint = await prisma.complaint.findUnique({
+            where: {
+                id,
+            },
+        });
+
+        if (!complaint) {
+            return res.status(404).json({
+                message: "Complaint not found",
+            });
+        }
+
+        const updatedComplaint = await prisma.complaint.update({
+            where: {
+                id,
+            },
+            data: {
+                complaintStatus,
+                finalDecision,
+                responsibleReviewEmployeeId: req.user.id,
+            },
+        });
+
+        return res.status(200).json({
+            message: "Complaint updated successfully",
+            data: updatedComplaint,
+        });
+    } catch (error) {
+        console.error("Update complaint error:", error);
+
+        return res.status(500).json({
+            message: "Internal server error",
+        });
+    }
+};
+
 module.exports = {
     loginAdmin,
     getAdminProfile,
@@ -869,4 +1132,5 @@ module.exports = {
     getAllOrders,
     getAllComplaints,
     updateComplaint,
+    getTechnicianSettlementReport,
 };

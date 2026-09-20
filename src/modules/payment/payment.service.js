@@ -1,4 +1,5 @@
 const paymentRepository = require("./payment.repository");
+const { encrypt, hash } = require("../../utils/encryption");
 
 const ALLOWED_PAYMENT_METHODS = [
     "BANK_TRANSFER",
@@ -96,14 +97,17 @@ const createPayment = async (orderId, user, paymentData) => {
     const calculation = await calculatePayment(orderId);
 
     const payment = await paymentRepository.createPayment({
-        transactionId,
+        transactionId: encrypt(transactionId),
+        transactionIdHash: hash(transactionId),
         serviceValue: calculation.serviceValue,
         commission: calculation.commission,
         tax: null,
         technicianEarnings: calculation.technicianEarnings,
         paymentMethod,
-        paymentStatus: "PAID",
-        referenceNumber: referenceNumber || null,
+        paymentStatus: "PENDING",
+        referenceNumber: referenceNumber
+            ? encrypt(referenceNumber)
+            : null,
         orderId,
     });
 
