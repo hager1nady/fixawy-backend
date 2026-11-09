@@ -49,7 +49,34 @@ const loginTechnician = async (req, res) => {
     }
 };
 
+
+
+const getAvailableTechnicians = async (req, res) => {
+    try {
+        const { specialty, profession, workArea } = req.query;
+
+        const technicians =
+            await technicianService.getAvailableTechnicians({
+                specialty,
+                profession,
+                workArea,
+            });
+
+        return res.status(200).json({
+            message: "Available technicians retrieved successfully",
+            count: technicians.length,
+            technicians,
+        });
+    } catch (error) {
+        return res.status(400).json({
+            message: error.message,
+        });
+    }
+};
+
+
 module.exports = {
     registerTechnician,
     loginTechnician,
+    getAvailableTechnicians,
 };

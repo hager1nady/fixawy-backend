@@ -78,6 +78,7 @@ model CatalogService {
 
 model Order {
   id                 String         @id @default(uuid())
+  orderCode          String @unique
   problemDescription String
   problemImage       String?
   problemVideo       String?

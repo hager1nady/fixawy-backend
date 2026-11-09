@@ -1,12 +1,17 @@
 const prisma = require("../../config/prisma");
 
+
 const findAssignmentById = async (assignmentId) => {
     return await prisma.assignment.findUnique({
         where: {
             id: assignmentId,
         },
         include: {
-            order: true,
+            order: {
+                include: {
+                    service: true,
+                },
+            },
             technician: {
                 select: {
                     id: true,
@@ -21,6 +26,7 @@ const findAssignmentById = async (assignmentId) => {
         },
     });
 };
+
 
 const acceptAssignment = async (assignmentId, orderId) => {
     return await prisma.$transaction(async (tx) => {

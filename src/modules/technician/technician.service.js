@@ -108,7 +108,24 @@ const loginTechnician = async (mobileNumber, password) => {
     };
 };
 
+const getAvailableTechnicians = async (filters) => {
+    const { specialty, profession, workArea } = filters;
+
+    if (!specialty && !profession && !workArea) {
+        throw new Error(
+            "Please provide at least one filter: specialty, profession, or workArea"
+        );
+    }
+
+    return technicianRepository.findAvailableTechnicians({
+        specialty,
+        profession,
+        workArea,
+    });
+};
+
 module.exports = {
     registerTechnician,
     loginTechnician,
+    getAvailableTechnicians,
 };

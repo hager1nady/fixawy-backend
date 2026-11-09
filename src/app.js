@@ -1,3 +1,4 @@
+
 require("dotenv").config();
 
 const express = require("express");
@@ -19,8 +20,15 @@ const swaggerSpec = require("./config/swagger");
 const cors = require("cors");
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
+
+// Log every incoming request before it reaches the routes
+app.use((req, res, next) => {
+    console.log("REQUEST:", req.method, req.originalUrl);
+    next();
+});
 
 app.get("/", (req, res) => {
     res.json({
@@ -33,10 +41,7 @@ app.use("/api/clients", clientRoutes);
 app.use("/api/technicians", technicianRoutes);
 
 app.use("/api/orders", orderRoutes);
-app.use((req, res, next) => {
-    console.log("REQUEST:", req.method, req.originalUrl);
-    next();
-});
+
 app.use("/api/admin", adminRoutes);
 
 app.use("/api/ratings", ratingRoutes);
@@ -51,7 +56,7 @@ app.use("/api/assignments", assignmentRoutes);
 
 app.use("/api/payments", paymentRoutes);
 
-app.use("/api/call-center", callRecordRoutes); 
+app.use("/api/call-center", callRecordRoutes);
 
 app.use("/api/clients", clientBalanceRoutes);
 

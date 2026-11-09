@@ -115,4 +115,35 @@ router.post(
     technicianController.loginTechnician
 );
 
+
+/**
+ * @swagger
+ * /api/technicians/available:
+ *   get:
+ *     summary: Search active technicians by specialty, profession, or work area
+ *     tags: [Technicians]
+ *     parameters:
+ *       - in: query
+ *         name: specialty
+ *         schema:
+ *           type: string
+ *         example: Air Conditioning
+ *       - in: query
+ *         name: profession
+ *         schema:
+ *           type: string
+ *         example: Installations
+ *       - in: query
+ *         name: workArea
+ *         schema:
+ *           type: string
+ *         example: Minya
+ *     responses:
+ *       200:
+ *         description: Available technicians retrieved successfully 
+ *       400:
+ *         description: Invalid search filters
+ */
+router.get("/available", technicianController.getAvailableTechnicians);
+
 module.exports = router;
